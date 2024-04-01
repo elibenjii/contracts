@@ -1,0 +1,30 @@
+[package]
+name = "Erc20Contract"
+version = "0.0.1"
+authors = ["crypto bro"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "4.3.0", default-features = false}
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+ink_prelude = { version = "4.0.0", default-features = false }
+ink_storage = { version = "4.0.0", default-features = false }
+openbrush = { tag = "4.0.0-beta", git = "https://github.com/Brushfam/openbrush-contracts", default-features = false, features = ["psp22", "ownable"] }
+
+[lib]
+name = "Erc20Contract"
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+    "openbrush/std",
+]
+ink-as-dependency = []
+
+[profile.dev]
+codegen-units = 16

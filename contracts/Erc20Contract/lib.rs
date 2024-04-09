@@ -3,7 +3,7 @@
 #[openbrush::implementation(PSP22, Ownable, PSP22Mintable, PSP22Metadata, PSP22Burnable, PSP22Wrapper)]
 #[openbrush::contract]
 pub mod psp22 {
-  use openbrush::{
+    use openbrush::{
         modifiers,
         traits::Storage,
     };
@@ -17,7 +17,7 @@ pub mod psp22 {
         #[ink(topic)]
         nft_id: u16,
         #[ink(topic)]
-        stats: [u8; 5],
+        stats: [u8; 6],
     }
 
     #[ink(storage)]
@@ -31,10 +31,9 @@ pub mod psp22 {
         metadata: metadata::Data,
         #[storage_field]
         wrapper: wrapper::Data,
-        nfts_stats: Mapping<u16, [u8; 5], ManualKey<123>>,
-
+        nfts_stats: Mapping<u16, [u8; 6], ManualKey<123>>,
+        upgrade_cost: Balance
     }
-    
 
     impl Erc20Contract {
         #[ink(constructor)]
@@ -45,11 +44,12 @@ pub mod psp22 {
             _instance.metadata.name.set(&name);
             _instance.metadata.symbol.set(&symbol);
             _instance.metadata.decimals.set(&decimal);
+            _instance.upgrade_cost = 500;
             _instance
         }
 
         #[ink(message)]
-        pub fn get_nft_stats(&self, nft_id: u16) -> Option<[u8; 5]> {
+        pub fn get_nft_stats(&self, nft_id: u16) -> Option<[u8; 6]> {
             self.nfts_stats.get(&nft_id)
         }
 
@@ -57,18 +57,17 @@ pub mod psp22 {
         pub fn add_nft_stats(&mut self, nft_id: u16, index: u8) {
             let caller = self.env().caller();
             let decimals = self.metadata.decimals.get().unwrap_or(0);
-            let burn_amount = 6 * 10u128.pow(decimals.into());
-
+            let burn_amount = self.upgrade_cost * 10u128.pow(decimals.into());
 
             // Burn 6 tokens from the caller's balance
             psp22::Internal::_burn_from(self, caller, burn_amount).expect("Should burn tokens");
-            let mut stats = self.nfts_stats.get(&nft_id).unwrap_or([0; 5]);
 
-            if index < 5 {
+            let mut stats = self.nfts_stats.get(&nft_id).unwrap_or([0; 6]);
+            if index < 6 {
                 stats[index as usize] += 1;
             }
-
             self.nfts_stats.insert(&nft_id, &stats);
+
             Self::env().emit_event(NftStatsUpdated {
                 nft_id,
                 stats,

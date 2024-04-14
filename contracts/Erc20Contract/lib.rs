@@ -32,7 +32,9 @@ pub mod psp22 {
         #[storage_field]
         wrapper: wrapper::Data,
         nfts_stats: Mapping<u16, [u8; 6], ManualKey<123>>,
-        upgrade_cost: Balance
+        upgrade_cost: Balance,
+        games: Mapping<AccountId, bool>,
+
     }
 
     impl Erc20Contract {
@@ -72,6 +74,28 @@ pub mod psp22 {
                 nft_id,
                 stats,
             });
+        }
+
+        #[ink(message, payable)]
+        pub fn start_game(&mut self) {
+            let caller = self.env().caller();
+            let value = self.env().transferred_value();
+
+            assert_eq!(value, 1_000_000_000, "Must pay 0.001 $AZERO fees to start the game");
+
+            self.games.insert(&caller, &true);
+        }
+
+        #[ink(message)]
+        pub fn check_game_status(&self, user: AccountId) -> bool {
+            self.games.get(&user).unwrap_or(false)
+        }
+
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        pub fn end_game(&mut self, user: AccountId) -> Result<(), PSP22Error> {
+            self.games.insert(&user, &false);
+            Ok(())
         }
     }
 

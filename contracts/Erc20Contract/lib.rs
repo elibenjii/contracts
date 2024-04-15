@@ -46,7 +46,7 @@ pub mod psp22 {
             _instance.metadata.name.set(&name);
             _instance.metadata.symbol.set(&symbol);
             _instance.metadata.decimals.set(&decimal);
-            _instance.upgrade_cost = 500;
+            _instance.upgrade_cost = 500_000_000_000_000; //500
             _instance
         }
 
@@ -81,7 +81,7 @@ pub mod psp22 {
             let caller = self.env().caller();
             let value = self.env().transferred_value();
 
-            assert_eq!(value, 1_000_000_000, "Must pay 0.001 $AZERO fees to start the game");
+            assert_eq!(value, 4_000_000_000, "Must pay 0.004 $AZERO fees to start the game");
 
             self.games.insert(&caller, &true);
         }
@@ -93,8 +93,19 @@ pub mod psp22 {
 
         #[ink(message)]
         #[modifiers(only_owner)]
-        pub fn end_game(&mut self, user: AccountId) -> Result<(), PSP22Error> {
+        pub fn end_game(&mut self, user: AccountId, mint_amount: Balance) -> Result<(), PSP22Error> {
+            // Check if the user has an ongoing game
+            let has_ongoing_game = self.check_game_status(user);
+        
+            // Assert that the user has an ongoing game
+            assert!(has_ongoing_game, "User does not have an ongoing game");
+        
+            // End the game for the user
             self.games.insert(&user, &false);
+        
+            // Mint the specified amount of tokens
+            psp22::Internal::_mint_to(self, user, mint_amount)?;
+        
             Ok(())
         }
     }

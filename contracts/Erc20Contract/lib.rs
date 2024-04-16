@@ -20,6 +20,7 @@ pub mod psp22 {
         stats: [u8; 6],
     }
 
+
     #[ink(storage)]
     #[derive(Default, Storage)]
     pub struct Erc20Contract {
@@ -75,14 +76,11 @@ pub mod psp22 {
                 stats,
             });
         }
-
         #[ink(message, payable)]
         pub fn start_game(&mut self) {
             let caller = self.env().caller();
             let value = self.env().transferred_value();
-
-            assert_eq!(value, 4_000_000_000, "Must pay 0.004 $AZERO fees to start the game");
-
+            assert!(value >= 4_000_000_000, "Must pay at least 0.004 $AZERO fees to start the game");
             self.games.insert(&caller, &true);
         }
 
